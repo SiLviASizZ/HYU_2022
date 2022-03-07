@@ -1,0 +1,15 @@
+Version : python 3.7
+
+Numpy
+python module, fast vector/matrix operations
+
+Transpose / Reshape : Order of Elements is Different
+
+What I learned
+1. using numpy ( simple operators )
+2. Vector(1d) & Matrix(2d) with NumPy ,  we use Matrix multiplication ! ( np.dot = @ )
+3. OpenGL ( API , not a library )
+
+Quiz
+Direction of Dimension ( ↓dim1 , →dim2 ) , looks like [a,b] on python interpreter , but it is actually [1, k] shape, so it can be multiplied
+
