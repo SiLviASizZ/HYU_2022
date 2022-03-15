@@ -1,0 +1,6 @@
+EQUIVALENCE OF DFA  /  NFA
+
+
+such NFA accepts same Language to such DFA ?
+
+given NFA , how to make DFA that accepts SAME Language to given NFA ?
