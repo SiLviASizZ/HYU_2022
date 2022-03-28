@@ -1,0 +1,33 @@
+To find distinguishable sets ..
+until no more distinguishable set found at n+1 step
+
+지난 시간에 했던 방법으로 DFA를 만들면
+그 DFA는 동일한 DFA 중 가장 state 개수가 적은 DFA이다 ( prove : 귀류법 )
+
+method : indistinguishable 한 state끼리 모은 다음에 집합 하나에 대해서 state를 만들어 주는 것
+
+indistinguishable : strings go to same state ( final or not )
+distinguishable : at least one example of going to different state
+
+
+--------------------------
+Regular Expression
+
+Language 를 표현하는 방법 3가지
+1. using Grammar => grammar 가 derivation 하는 모든 sentence 를 Language 로 보는 것
+2. DFA / NFA 가 Accept 하는 string 들을 Language 라고 하는 것
+----( 조금 더 직관적인 표현법 )
+3. Regular Expression
+
+
+What is Regular Expression ?
+- Regular Expression  :  
+1. 공집합, Lambda ( null string ) , 알파벳에 들어 있는 모든 symbol 들 ( primitive ) , 그 자체로 Regular Expression
+2. primitive 들을 + * star () 연산자로 연산한것도 Regular expression , 여러 번 ( 0~ 번 ) 반복해도 ..
+
+Regular Expression 들이 표현하는 Language 들에 대하여 ..
++  )  a + b ) a union b
+*  )  a * b ) a concatenate b
+
+4. L((r1)) = L(r1) . have nothing to do ( just sure about its operation order )
+
