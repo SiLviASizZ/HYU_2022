@@ -1,0 +1,44 @@
+vpos/kernel/kernel.start.c 에서
+pthread 위 1줄 제외 주석처리
+
+vpos/hal/io/serial.c 에서
+vh_ulcon = 0x03;
+vh_ucon = 0x245;
+vh_ufcon = 0xc7;
+vh_uintm1 = 0xe;
+vh_uintp1 = 0x1f;
+
+-------------------------------------
+
+ULCON register
+
+
+timer -> 일정한 주기로 interrupt 를 위해 주로 사용된다
+timer HW setup -> 6 registers ..
+
+what we will use => PWM timer , timer 4 ( source clock is 66MHZ )
+
+할일 : reload value 를 잘 수정해서 1초에 한번 하도록 .. => Divider 를 통과한만큼
+
+vh_TINT_CSTAT 는 없는데 , lms 상의 S5PC100_UM_REV101.pdf 에서 레지스터를 찾아서 직접 입력해보세요
+
+clock frequency : 소수점 이하 value 는 절삭
+
+in vpos/hal/include/vh_io_hal.h
+timer address
+vh_TCFG0 : 0xEA000000
+vh_TCFG1 : 0xEA000004
+vh_TCON : 0xEA000008
+vh_TINT_CSTAT : 0xEA000044
+vh_TCNTB4 : 0xEA00003C
+vh_TCNTO4 : 0xEA000040
+
+in vpos/hal/io/timer.c
+initialize :
+TCNTB4 : 0x3e80;
+
+reload value : 16000
+
+int a = 4
+
+*0x3211100 = 3;
