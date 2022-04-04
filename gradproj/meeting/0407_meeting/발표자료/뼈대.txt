@@ -1,0 +1,28 @@
+RNN => LSTM
+
+RNN => 중요내용만
+LSTM => 상세하게
+
+RNN 복습 + 보완
+
+1. one-to-one / many-to-one / many-to-many Problem Dealing ( includes prob. itself )
+2. f ( tanh ) function and output activation function, with an example
+3. introducing Vanishing Graient Problem , introduce graph with tanh(x) and tanh'(x)
+4. modify Encoding/Decoding Definition
+
+< LSTM > ( with the flow of comparison to RNN )
+
+1. LSTM is RNN + MEMORY CELL
+2. communicate with cell state and hidden state => operations , using post propagation graph
+3. Introducing gates with steps
+	3-0. what is W , U , V ?
+	3-1. FORGET gate
+	3-2. INPUT gate
+	3-3. C'(t)
+	3-4. C(t)
+	3-5. h(t)
+4. Then , how LSTM solved Vanishing Gradient Problem ?
+
+< Reference >
+
+fin .
