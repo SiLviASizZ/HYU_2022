@@ -1,3 +1,54 @@
 lexical scope : Functions can be passed around .. where the function was defined, not where it was called ( <<<>>> Dynamic scope )
 WHAT IS IMPORTANT IS .. WHERE FUNCTION DEFINED ? ... get the value at that point
 
+nested let-expression ? is it horrible ? ...
+nested scopes => wrong in Python currently
+
+Lexical scope makes much more sense
+1. Function meaning does not depend on variable names used
+2. Functions can be type-checked and reasoned about where defined
+3. Closures can easily store the data they need
+
+Dynamic scope : Occasionally convenient in some situations ( so => Languages like Racket supports Dynamic Scope )
+
+A function body is evaluated every time the function is called ( not until callation )
+Variable binding evaluates its expression when .... binding is evaluated . NOT everytime the variable is used
+
+iterator-like functions
+
+COMBINE FUNCTIONS
+
+difference between fun and val :::: " fun A B = ( fn1 * fn2 * fn3 ) B " :::: " val A = ( fn1 * fn2 * fn3 ) "
+
+left to right ? => define through infix operator 
+
+
+CURRYING
+Recall every ML function takes exactly one argument .
+
+DO NOT write " fun f x = g x " when we can write " val f = g " ( unnecessary function binding ) ( SAME IN ) fold ( fn ( x, y ) => x + y) 0
+
+Tupling / Currying : both constant-time operations.
+currying is a normal thing ? :: many functional language implementations do better with currying ..
+
+ML has seperate mutation
+- Mutable data structures => okay in some situations
+... when " update to state of world " is appropriate model
+... but most language constructs truly immutable
+
+NO REFERENCE ON HW .. use mutation-free programming .
+
+t ref ( t:type , t ref:new type )
+
+Expressions ) ref e : create reference .. with initial contents e
+e1 := e2 to update contents ( := is assign )
+!e : retrieve contents , not negation
+
+Callbacks
+
+Implementing Abstract Data Types
+- put multiple functions in a record
+- functions can share same private data
+- CAN BE mutable or immutable
+- OOP / Functional programming have some deep similarities
+..
