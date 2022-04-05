@@ -1,0 +1,3 @@
+lexical scope : Functions can be passed around .. where the function was defined, not where it was called ( <<<>>> Dynamic scope )
+WHAT IS IMPORTANT IS .. WHERE FUNCTION DEFINED ? ... get the value at that point
+
