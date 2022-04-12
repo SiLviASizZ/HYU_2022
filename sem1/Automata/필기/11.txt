@@ -1,0 +1,35 @@
+Identifying Nonregular Language
+
+L = { a^n b^n , n >= 0 } => DFA cannot accept this
+finite state machine => num of state is finite
+
+증명 ) 비둘기집의 원리 .
+if DFA exists which accepts L , it should only accept L .
+but .. DFA that accepts L , it should accept one of strings in L2 : { a^n b^m , n /= m }
+
+in some language , if it is infinite regular language , for w , ( |w| >= m_length ) .. set w = xyz , |xy| <= m |y| >= 1 ( x,z can set as 0 )
+w(i) = x y^i z
+모든 sentence 가 특정 길이를 넘어가버리면 앞의 일부분을 가지고 iterate 해도 다시 L에 속한다 < 를 항상 만족시키는 m이 존재.
+find M => num of state 보다 크게 만들면 됨
+( cycle 이 있다는 이야기고 .... cycle 을 돌면 그 sentence 도 accept 되어야 함 )
+
+a^m b^m
+xy = a^m
+set k = len(y)
+so ... a^(m+k)b^m must be accepted ( prove above )
+
+
+---
+
+L = W * W(reverse)
+L is not regular ....
+set W = a^m b^m ( m < pumping lemma 가 guarantee 하는 m )
+L = a^m b^m b^m a^m
+펌핑 랩마에 의해서 .. W 안에 a^k 라는 반복되는 부분이 있다는 것임 ( cuz its num should be finite )
+so ... a^(m-k)b^m b^m a^m should be accepted by the same DFA
+it is not a form of L . => L is not regular
+
+이해했다 .. DFA가 state 개수가 finite 하므로
+infinite 형태로 제시되는 language 에 대해 무조건 cycle 이 있어야 함
+그러면 cycle 을 도는 횟수에서 반례를 찾으면 됨
+
