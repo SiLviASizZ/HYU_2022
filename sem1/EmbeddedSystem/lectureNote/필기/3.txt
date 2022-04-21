@@ -1,0 +1,90 @@
+Topics
+- Memory Map
+- MPU
+- Bit-randing
+- Miscellaneous features
+
+Cortex-M3 : 32bit => 4GB memory space
+	fixed memory map , Nested Vectored Interrupt Controller and Memory Protection Unit have the same memory locations in all Cortex-M3 products
+
+Memory Access Attributes
+	memory map defines memory attributes of accessing each memory block or device
+- Bufferable : write to memory can be carried out by a " write buffer " ... processor => continue next inst. exec.
+- Cacheable : memory => cache
+- Executable : execute <= memory
+- Sharable : memory => ( multiple bus )
+
+Memory Access Permissions
+DEFAULT ( MPU disabled ) / or MPU determine permissions => blocked => fault exception
+... Access in user program allowed : Code , SRAM , Peripheral , External RAM , Vendor specific section .. ITM section => READONLY
+
+
+Memory Protection Unit ( MPU )
+check if memory / IO access allowed
+	8~16 Distinct Regions => each region can be set to some combinations of fetch/read/write permissions
+	regions can be overlapped in ARMv7 => highest number affects memory access
+	not permitted => exception
+
+No access => permission fault
+RO => read only | RW => access only ( fully access )
+
+
+Bit-banding
+Bit-band operation : allows a single load/store ( read/write ) operation to access a single data bit
+	regions : first 1MB of SRAM / peripheral region => can be accessed via a separate memory region called the bit-band alias
+Bit banding done transparently by bus matrix
+
+bit-band Region / Aliased equivalent => mapped 1:1 ( 1bit : 4byte )
+... Write to Bit-band Alias :
+	without bit-band : setup address => read => modify bit => write back result
+	with bit-band : setup address => setup data => write
+Read from Bit-band Alias
+	without bit-band : setup address => read => extract bit
+	with bit-band : setup address => read
+
+advantages using bit-band operations
+	- Faster bit operations , fewer instructions
+	- Exclusive read/write operations by HW
+
+Data Loss prevention with Locked Transfers .. => Lock 없으면 data 손실 ( 뻔한얘기 )
+bit-band operations in C
+	- no native support of bit-band operation in most C compilers
+		- separately declare the address /  bit-band alias of a memory location like..
+			#define DEVICE_REGO 0x40000000
+			#define DEVICE_REGO_BIT0 0x42000000
+			#define DEVICE_REGO_BIT1 0x42000004
+			,,,
+			DEVICE_REG0 = 0xAB; => accessing hardware register by noormal address
+			DEVICE_REG0 = DEVICE_REGO | 0x2 => setting bit 1 without using bitband feature
+			DEVICE_REG0_BIT1 = 0x1; => setting bit 1 using bitband feature , via the bit band alias address
+- C macros can make accessing the bit-band alias easier
+- Bit banding : to control one bit ( sum 1MB ) , allocate 32MB memory space => easy to calculate
+
+
+Miscellaneous features
+- Unaligned Transfers ( support unaligned transfers on single access ) , data memory accesses can be defined as aligned or unaligned
+- Word size , the address is not a multiple of 4 in word size , or 2 in half-word size
+Limitations 
+- Not supported in Load/Store instructions
+- Stack operations must be aligned
+- exclusive accesses must be aligned
+- unaligned transfers are not supported in bit-band operations
+When unaligned transfers are used => they are actually converted into multiple aligned transfers by the processor's bus interface unit
+- and it takes more clock cycles for a single data access
+
+
+Exclusive Accesses ( LDREX , STREX )
+- lock is usually used to safely share resources among tasks and handlers
+- befor using resource , acquire lock => after release lock
+- can check availability of hardware resource ( maybe small memory block for a lock variable )
+
+Exclusive Read ( lock bit ) => lock bit set ? => no => set lock bit => return status from exclusive write success ? => yes => can access shared resource
+
+Endian mode
+- Cortex-M3 supports both little endian and big endian mode
+little endian is recommented
+supported memory type also depends on the design of the rest microcontroller => check microcontroller datasheets in detail
+- endian mode is set when the processor exits reset and it cannot be changed afterward
+- Instruction features are always in little endian , as are data accesses in the configuration control memory space and external PPB memory range
+- The data can be easily converted between little endian and big endian using instructions REV/REVH
+
