@@ -10,4 +10,4 @@ order in the list does not matter
 - UintP : matches only Unit and produces the empty list of bindings
 - ConstP 17 : matches only Const 17 , and produces the empty list of bindings
 - TupleP ps : matches a value of the form Tuple vs , if ps and vs have the same length and for all i
-		
+- Constructor P (s1, p) matches Constructor (s2, v) if s1 and s2 are same string, and p matches v. The list of bindings produced is the list from the nested pattern match. 

@@ -1,0 +1,14 @@
+LSTM
+
+1. Compliments
+	- Back propagation of LSTM
+	- Example of NLP ( in short words , using gates graph in last pptx )
+
+2. Short Projects using LSTM Layer in Keras
+	- Basic elements of DL in LSTM ( optim , reg , nm , ... )
+	- ctrl flow with each components' role
+
+
+--------------------
+
+tanh'(Ht)
