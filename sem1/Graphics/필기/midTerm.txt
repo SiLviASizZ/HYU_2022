@@ -1,9 +1,0 @@
-numpy array
-2D↑ : a.shape : dim0 ( col ) dim1 ( row )
-a.size : col x row
-=> start from 1
-
-Slicing ( important )
-
----
-
