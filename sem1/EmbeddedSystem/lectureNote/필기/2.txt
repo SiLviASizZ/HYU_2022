@@ -1,0 +1,174 @@
+Lecture 3
+- ARM Architecture Overwiew
+- Cortex-M Processor overview / programmer's model
+
+
+ARM 
+
+ARM Architecture
+- Based upon RISC Architecture , enhanced to meet embedded application requirements
+	- Difference : Fixed length instructions
+		Load-store Architecture ( memory-to-register load instructions, Register-to-memory store instructions )
+		Large uniform register file
+		32-bit / 64-bit , improved speed/power
+
+ARM Cortex Processors
+Cortex-A : capable of OS support . ( smartphones / TV ... )
+Cortex-R : Real-time applications ( automotive braking system , powertrains .. )
+Cortex-M : Cost-sensitive solutions for deterministic microcontroller applications ( microcontrollers / smart sensors )
+
+1. Cortex-A
+Design : High clock frequency , long pipeline, high performance, multimedia support
+System features : Memory management unit, cache memory, 
+Targeted markets : Mobile computing, energy-efficient servers, high-end microprocessors
+
+2. Cortex-R
+Design : High clock frequency, long~medium pipeline, low interrupt latency
+System features : Memory protection unit, cache memory, Tightly coupled memory
+Targeted markets : industrial microcontrollers, automotives, Hard disk controllers ..
+
+3. Cortex-M
+Design : short pipeline, low power, low interrupt latency
+System features : memory protection unit , nested vectored interrupt controller, wakeup interrupt controller
+Targeted markets : microcontrollers, deeply embedded systems ... ( iot .. )
+
+
+ARM Architecture vs ARM processor
+ARM architecture : Describes the details of instruction set, programmer's model, exception model, and memory map
+		Documented in the Architecture Reference Manual
+ARM processor : Developed using one of the ARM architectures
+		more implementation details , ( like timing information )
+		Documented in processor's Technical Reference Manual
+
+Architectures functional evolutions : Reduce code size + speedup exec of bytecodes + enhance compute capabilities + enhance security
+
+
+INSTRUCTION SETS
+instruction state switch between ARM and Thumb => controll with LSB ( bit ) 
+overheads between state change
+
+Thumb-2 Instruction set
+1. variable-length instructions
+	- ARM instructions : 32 bits , Thumb instructions : 16 bits. Thumb-2 is 16 or 32
+2. Thumb-2 gives improvement in code density over ARM, and performance over Thumb
+
+
+Cortex-M Processor Overview
+Cortex-M3 : Hierarchical processor integrating core and advanced system peripherals
+Cortex-M3 Processor : configurable interrupt controller, Nested Vectored Interrupt Controller , Bus matrix ( ICode, DCode, System Bus ) , Advanced debug components, optional MPU
+Cortex-M3 core : Harvard Architecture , 3-stage pipeline prediction , Thumb-2 instruction set , ALU divide and single cycle multiply
+
+
+PROGRAMMER's MODEL
+- programmable in c
+- stack-based exception model
+- Thumb , Thumb-2 instruction sets
+- two processor modes , Thread mode ( user tasks ) , Handler mode ( exceptions )
+- Vector table contains addresses
+
+Cortex-M Processors, REGISTERS
+R0~R15 , ..
+R0~R7 : general purpose registers
+R8~R12 : high registers . only accessable with ( MOV , ADD , CMP ) 
+R13 ( MSP : main stack pointer ) 
+R13 ( PSP process stack pointer ) 
+R14 : Link register
+R15 : PC
+special registers
+xPSR : program status registers
+PRIMASK      )
+FAULTMASK   ) => Interrupt Mast Registers . FAULTMASK and BASEPRI are not available in ARMv6-M
+BASEPRI       )
+CONTROL : control register
+
+FPSCR ( floating point status and control register ) : Available on Cortex-M4 with FPU only ( D0~D15 , S0~S31 )
+
+
+Stack Pointers ( R13 )
+two stack pointers are banked . only one is visible at time
+MSP : default , used by OS kernel , exception handlers , and privileged-mode programs
+PSP : Used by user application code
+
+Link Register ( LR, R14 )
+store the return program counter when a subroutine or function is called
+함수나 하위모듈 호출시 그 이후에 돌아가는 PC가 저장됨
+
+Program Counter ( PC, R15 )
+Due to the Pipelining, value is not the same to the location of executing instruction
+when reading PC , LSB is always 0
+writing PC , it will cause a branch
+- LSB must set to 1 to indicate the Thumb state operations
+- set to 0 implies to switch to the ARM state , which will result in fault exception in Cortex-M3
+
+
+Special Registers
+in Cortex-M3 , PSRs (program status registers) , PRIMASK, FAULTMASK, BASEPRI (interrupt mask registers) , CONTROL (control register)
+Only accessed via MSR and MRS instructions
+( MRS < reg > , < special_reg > / MSR < special_reg > , < reg > ) ... note : MSR / MRS cannot have
+
+Program Status Registers ( PSRs )
+- they are subdivided into three status registers . Application / Interrupt / Execution ( A/I/E PSR )
+- when they are accessed as a collective item, the name xPSR is used ( PSR used in program codes )
+	EPSR, IPSR => read-only
+	when accessing xPSR, => call PSR ( MRS r0, PSR / MSR PSR, r0 ) ( MRS : read / MSR : write )
+
+PRIMASK / FAULTMASK / BASEPRI
+PRIMASK : 1-bit , allows non-maskable-interrupt ( NMI ) , and hard fault exception ; All other interrupts and exceptions are masked. default is 0 ( 0 = no masking )
+FAULTMASK : 1-bit , allows only NMI when set . all interrupts and fault handling exceptions are " disabled " , default = 0
+BASEPRI : up to 9 bits . It defines the masking priority level . when set => disables all interrupts of the same / lower lever ( 777 )
+these 3 reg cannot be set in user access level .
+
+
+Control Register => used to define previlege level and the stack pointer section .
+2-bit
+CONTROL[1] => stack status , 1=Alternate stack is used, 0=Default stack(MSP) is used ( thread / base level => alternate stack is PSP , no alternate stack for handler mode ( it means zero ) )
+CONTROL[0] => 0=Previleged in Thread mode , 1=User state(=unprevileged) in Thread mode ( handler mode => 0 ( privileged mode ) )
+
+CONTROL[1] => Cortex-M3 , handler mode 0(MSP) , Thread mode 0 or 1 . writable only when in privileged level
+CONTROL[0] => writable only in privileged level
+only accessable with MSR/MRS instructions
+
+
+
+----
+
+Operation Mode
+two modes / two privilege levels
+- determine whether the processor is running a normal program / or running an exception handler
+
+EXCEPTION => Handler mode
+MAIN PROGRAM => Thread mode
+
+
+Processor mode
+- Handler mode ( handle exceptions )
+	returns to thread mode when exception processing finished
+	software execution is always privileged
+- Thread mode ( application software )
+	CONTROL register controls whether software execution is privileged .
+
+PRIVILEGE LEVELS
+- Unprivileged ( user )
+	has limited access to the MSR ( Move Register to Special Register ) and MRS ( Move Special Register to Register ) instructions
+	cannot use CPS ( Change Processor State ) instruction
+	cannot access the system timer, NVIC , or system control block
+	might have restricted access to memory or peripherals
+	Unprivileged software executes at the unprivileged level
+
+- Previleged
+	The software can use all the instructions and has access to all resources
+
+control[0] = 0 => privileged , 1 => unprivileged
+
+
+
+Vector Tables
+- array of word data
+- represents starting address of the handler for one exception / interrupt type
+	- Cortex-M3 , vector addresses in table should have their LSB set to 1 => indicate they are thumb code
+- base address of vector table : relocatable . initial => 0x0
+
+Reset Sequence
+- after the processor exits reset, it will read two words from memory
+	- 0x0 : default value of R13 ( MSP )
+	- 0x4 : Reset vector  (can find in vector table) ( starting address of startup program , LSB should set to 1 => Thumb state )

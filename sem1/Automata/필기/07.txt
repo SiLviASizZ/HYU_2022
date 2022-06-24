@@ -1,0 +1,5 @@
+somehow we express with regular expression .. 
+we can turn it into NFA that accepts that language
+
+so it goes to Regular Expression -> NFA -> DFA
+

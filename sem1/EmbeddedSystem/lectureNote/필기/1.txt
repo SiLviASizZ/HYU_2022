@@ -1,0 +1,50 @@
+CPU : 폰노이만 : data / address memory in one place , Harvard : in seperate place
+Instruction execution process ( fetch decode execution )
+
+fetch : read next instruction from IR
+decode : get required operand, route them to ALU
+Sequence : Determine the address of next instruction , load to PC
+Execution : generate control signal
+
+System Organization
+memory-mapped I/O (i/o and memory have same address space) , Port-mapped I/O (i/o and memory have different address spaces)
+
+Processor Operation Modes .. usr / spv  (  control with bit  )
+
+Interrupt -> deal with real-time programming ( interrupt handler takes control of it )
+
+multiple nested interrupts : have priority
+
+Cache memory : CPU => check if its in cache => memory ( and decide to store in cache )
+we can separate data / instructions in each cache
+
+CPU pipelining
+- HW fully use
+Hazards
+- Structural hazards : resource conflicts
+- Data hazards : inst require result of previous inst. => exposed by overlapping in pipeline
+- Control hazards : pipelining of instructions that change PC
+
+code : high level -> assemply -> machine level
+
+Registers : R/W
+stores 32bit value
+example) STM32L
+R0~R12 : general-purpose registers
+R13 : stack pointer
+R14 : Link register
+R15 : PC 
++ special registers
+
+PC stores memory address of next instruction to be fetched
+
+
+Program execution => where variable stored?
+Data Memory ( RAM ) , Instruction Memory ( Flash Memory )
+
+동작들 => instruction memory, variables => SRAM(data memory) , but some variables are not stored in memory ( stored in register )
+Heap area and Stack area in RAM
+
+
+loading => excution ,
+read-write section is compied from ROM to RAM

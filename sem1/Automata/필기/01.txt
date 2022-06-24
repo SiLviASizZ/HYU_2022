@@ -1,0 +1,102 @@
+Language => alphabet , string 을 먼저 정의를 해야함
+
+alphabet : sigma 기호로 나타냄. ( symbol )
+string : symbol 들을 연결해서 만드는 문자열 ( ex: alphabet : sigma = {a,b} , string : abab, aaabbb 등 )
+	w = abab, aaabbb ... : w는 alphabet 이 아니라 string 자체를 의미한다
+	
+	w = a1 a2 ... an
+	v = b1 b2 ... bm
+	wv = a1a2 ... anb1b2 ... bm
+	string 의 reverse : ( w^R 으로 씀 ) : 거꾸로 한 거, an an-1 ... a1
+	w의 absolute : string 의 길이 ( = n ) , absolute of v = m
+
+
+string lambda : absolute of lambda = 0 . ( NULL string )
+substring : 원래 string 의 일부 string
+abab 의 substring : a, ba, aba, bab 등
+특별한 substring들
+	- 맨 앞에서 시작하는 substring ( abab : a, ab, aba, abab ) : prefix
+	- 항상 뒤에서 끝나는 substring ( abab : b, ab, bab, abab ) : suffix
+
+string w 에 대해서
+w^0 = lambda
+w^1 = w
+w^2 = w*w
+
+sigma star : sigma에 존재하는 symbol을 가지고 만들 수 있는 모든 string ( includes lambda )
+sigma plus : sigma star - lambda
+
+Language 의 정의 : 특정 alphabet에 대해서 정의가 되는데 ..
+alphabet 을 가지고 string 을 만들었을 때, 임의의 subset 을 각각 Language 라고 한다 .
+
+example : Sigma star = {lambda, a, b, aa, ab, ba, bb, aab} , { a, aa, aab} => 이게 하나의 Language 임
+L = {a^n b^m : n, m>=0}
+
+한 Language 안에 여러 String 들이 있음 : 이 String 들을 Sentence 라고 한다.
+우리가 일반적으로 쓰는 자연 언어도 문장의 집합이라고 보는것
+
+Language = set ,
+L compliment : 여집합=>전체집합을 알아야함 ( Sigma star ) . Sigma star - L = L compliment
+L reverse : L에 있던 sentence 들을 reverse 한거 , L reverse = { w reverse : for w in L }
+L1L2 : L1 = {a,aa} , L2 = {b,bb} 일때, L1L2 : { ab, abb, aab, aabb } 중복이 있을 수 있으므로 꼭 m*n 개가 나오지는 않음 최대 m*n 개
+
+L^n Definition ( L1L2 에서 변형해서 L을 n번 )
+L^0 = {lambda} , 공집합이랑 다름 . NULL 이라는 string 을 하나 가지고 있는 것
+
+L star : L0 L1 L2 L3 ... 을 모두 합집합 한 것
+L plus : L1 L2 L3 ... 을 모두 합집합 한 것 ( L1, L2 등에서 lambda 존재하면 포함하므로 L star - L0 으로 성립할 수 없음 )
+
+
+L = {a^n b^n : n>=0}
+L2 = {a^n b^n a^m b^m : n,m >= 0}
+L reverse : {b^n a^n, n>=0}
+
+
+
+
+
+-----
+
+
+
+Grammer G = (V, T, S, P) , V: variables, T: terminal symbols, S: start variable, P: productions
+우리가 문법이라고 부르는 건 보통 Productions
+주어부, 서술부 등 : variable 에 해당
+Terminal : 실제 영어에서 사용하는 단어들
+Start variable : 특별하게 시작할 때 사용하는 variable
+
+Example
+G = ({S}, {ab}, S, P) ::: variable : S / terminal symbol = a,b / start variable : S ( variable이 하나밖에 없으니까 )
+production rule P : S->aSb , S->lambda
+
+S에서 시작을 하고, production rule 을 반복적으로 적용 , variable 이 없어질 때까지
+Production 을 하나씩 적용하는 것 : derivation , => 으로 표현
+S=>aSb ( string 이 아님. string 은 Variable 이 없고 terminal 만 있어야 함. 여기서 variable 을 없애는 게 목적 )
+aSb=>ab
+so, ab라는 string 은 production rule 을 사용해서 derivation 할 수 있는 string
+S=>aSb=>aaSbb=>aabb
+
+이 Grammer 로 만들 수 있는 Language .... a^n b^n
+
+Derivation star : 몇 번 하든 상관 없음 , Derivation : 한 번
+S =*> aabb
+S => aSb => aaSbb => aabb
+여기서 aabb = sentence , aSb/aaSbb = sentential form , sentence가 될 수 있는 형태
+
+Grammer G 에 대해서 생성되는 Language L : L(G) = { w in T star : S =*> w } : Start symbol 로부터 만들어낼 수 있는 모든 Sentence 들의 set
+
+Lets talk about .. L = {a^n b^(n+1) : n>=0}
+Language 가 주어졌을 때, 이 Language 를 생성하는 Grammer를 만들기
+Production rule 을 만들고 나면 Variable 은 정해질 것. Production Rule 을 잘 만드느냐에 달려 있음 .
+P : S->Ab, A->aAb, A->lambda , V = {S, A}
+S->Sb 라는 Rule 일 경우, S->Sb 를 반복적으로 Derive 하는 것을 방지하기 위한 새로운 Variable
+
+
+P: S->SS, S->lambda, S->aSb, S->bSa 일 때. (X)
+이 Grammer 을 이용해서 생성되는 String 들은 num of a = num of b  (Y)
+X->Y . Y->X 도 이건 성립 .. 증명은 induction 으로 함
+분류 :
+a......b
+b.....a
+a.....a
+b....b

@@ -1,0 +1,4 @@
+Context Free Grammar
+<> Context Sensitive
+
+Context free language : regular language 가 아닌것도 표현 할 수 있음

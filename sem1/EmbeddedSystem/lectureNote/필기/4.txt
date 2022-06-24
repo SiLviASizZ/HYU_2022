@@ -1,0 +1,150 @@
+Topic
+- ARM assembly code
+- Assembler Directives
+
+c -> assembly -> microprocessor
+
+TWO pass assembly
+- Most assemblers read the source file TWICE
+FIRST PASS : build a symbol table
+	- calculate and record values for each symbol ( symbol : golbal variable , functions , labels .. , values : address of data )
+	- some symbols may not have a known value ( they are unresolved , linker will have to fix them )
+SECOND PASS : generate the object file
+	- output the code in object file
+	- use the symbol table to provide values when needed
+	- add information to the object file , to tell the linker about any symbols that are unresolved
+
+
+call => first, push return address onto stack
+
+
+Assembly Expressions
+	- can be used as instruction operands or directive argument
+	- consist of one or more constants , or symbol references , combined using operators
+	- Assembler evaluates all expressions
+Constants
+- decimal integel
+- hexademinal integer (prefixed with 0x)
+- Octal integer ( prefixed with 0 ) 
+- Binary integer ( prefixed with 0b )
+	negative numbers can be represented using the unary operator " - "
+Symbol references
+- do not need to be defined in the same assembly language source file, to be referenced in expressions
+- The period symbol (.) is a special symbol that can be used to reference the current location in the output file
+
+Assembly operators
+- Unary operators : + - ~
+- Binary operators : + - * / %
+- Binary Logical operators : && ||
+- Binary Bitwise operators : & | ^ >> <<
+- Binary Comparison Operators : == != < > <= >=
+
+
+Assembly Directives
+1. Section directives => instruct the assembler to change the ELF section that code anad data are emitted into
+2. String definition directives => Allocates one or more bytes of memory in the current section . and defines the initial contents of the memory from a string literal
+3. Data definition directives => allocates memory in the current section, and defines the initial contents of that memory
+	string definition directive => from a string , data = any contents
+4. Alignment directives => align the current location in the file to a specified boundary ( ex : ensuring byte size => better utilize cache )
+5. Space-filling directives => ( .space : count bytes of data , each of which has value , .fill : emit count data variables , with length size bytes and value
+6. Macro directives => defines new macro with name macro_name . defined => instantiated by using it like an instruction mnemonic
+7. Org directives= > advances the location counter in the current section to new-location , moves only forward .
+8. Conditional assembly directives : conditionally assemble sequences of instructions and directives ( .if .elseif .else .endif )  .. 
+9. Symbol binding directives : modify ELF binding of one or more symbols ( .global / .local / .weak symbol )
+10. Instruction Set Selection Directives : .arm ( A32 instructions ) ,. .thumb : T32/UAL syntax , .thumb_func / .syntax
+	.syntax : sets the instruction set syntax.
+		divided : default for compatibility with legacy , ARM / Thumb instructions are used separately
+		unified : Necessary for Thumb2 instructions, enables UAL syntax
+
+
+---
+
+Lec6
+Topics
+- ARM Assembly Instruction
+- ARM Arithmetic and logic instructions
+
+Assenbly instructions Supported
+	- Arithmetic and logic ( add. subtract, multiple, divide, shity, rotate .. )
+	- Data movement ( load, store, move )
+	- Compare and branch ( Compare , test , if-then , branch , compare and branch on zero )
+	- Miscellaneous : breakpoints, waits for events, interrupt enable/disable , data memory barrier , data synchronization barrier ..
+
+ARM instruction format : mnemonic operand1, operand2, operand3 ( ADD r0, r2, r3 )
+	some instruction have no operands at all
+		- operand 1 : destination , 2,3 : source operands
+		- operand 2 : usually register
+		- operand 3 : register , or immediate number , register shifted to a constant amount of bits , or register plus an offset ( used for memory access )
+ADD r1, r2, #15 = r1 = r2 + 15
+
+Arithmetic and Logic instructions
+	Syntax : operation Rd, Rn, Operand2
+Shift : LSL ( Logic Shift Left ) , LSR logic shift right , ASR arithmetic shift right , ROR  rotate right RRX rotate right with extend
+Logic
+BIt set/clear
+Bit/byte reordering
+
+
+Arithmetic and logic instructions
+- Addition and Subtraction
+	ADD, ADC, SUB, RSB, SBC
+- Multiplication
+	MUL, MLAm MLS, SMULL, UMULL, UMLAL
+- Division
+	SDIV, UDIV
+- Saturation
+	SSAT, USAT
+- Sign and zero extensions
+	SXTB, SXTH, USTB, UXTH
+- Bit field extract
+	SBFX, UBFX
+
+ADDS : S : set condition flags
+
+64bit : 32bit 연결 , carry out
+
+MLA r6, r4, r1, r0 = r6 = r4xr1 + r0
+MLS : subtract
+
+
+BIC r2, r0, r1 : r2 = r0 & not r1
+
+BFC : op1 의 op2 부터 op3 만큼 bit clear ( set to 0 )
+BFI : op1의 op3부터 op4만큼 op2의 처음부터 op4만큼으로 덮어쓰기
+
+
+Saturation : signal processing
+for example , in signal amplification
+SSAT, USAT : saturates signed value . but range is signed/unsigned . x로 채운다
+data가 한정되어 있는 상황에서 넘기거나 하는 경우 SSAT / USAT 사용하여 최대값으로 할당할 수 있음 ( 채울 수 있음 )
+
+Reverse order : to chande endianness : bit-litt 간 바꾸기 위해 순서를 바꿔줄 수 있다
+REV : byte 단위 , REB16 : half-word 단위
+REVSH : sign extension of byte 0 ( 16 bits ) , operand1의 압 16비트 = 0 , 뒤는 바꿔줌
+
+sign and zero extensions : SXTB 
+
+MOV r1, r2 : copy r2 to r1
+MVN r4, r5 : r4 = bitwise logical NOT of r5
+MOV r1, r2, LSL #3 : r1 = R2 << 3
+MOVW R1, #0x4321 : r1 = 0x00004321
+MOVT 40, #0x8765 : ro = 0x87654321 . movt : move top
+MOVW : 뒤를 채우고 앞은 0으로 만듬
+MOVT : 앞을 채우고 뒤는 그대로 놔둠
+
+
+Barrel Shifter라는 게 있음
+ALU의 second operand 가 가짐
+ADD r1, r0, r0, LSL #3 이 있으면
+r1 = r0 + r0 << 3 ( logical shift left ) 하면 됨
+r1 = r0 + 8 * r0 와 같은 뜻
+r1 = r0 - r0 , LSR #3 이면
+r1 = r0 + r0/8 , unsigned . LSR 이 아니라 ASR 이면 signed
+
+Barrel shifter 는 연산을 speed-up 하기 위해 사용됨
+ADD r1, r0, r0, LSL #3
+
+=
+MOV r2, #9
+MUL r1, r0, r2 .
+instruction 이 많다

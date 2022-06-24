@@ -1,0 +1,68 @@
+softmax function ( 확률을 나타내 줌 )
+: XOR Data 라벨 
+
+Multi ~ classification
+확률로 Data 예측 ( SIgmoid 는 확률이 아님 )
+확률 구하는 방법 : 어떤 data set 의 라벨이 3개 있을 때 분류를 하고 싶다?
+out put layer에 class 개수만큼 노드 지정 => 결과가 맞게 classification 지정 해야 한다.
+확률을 1에 가깝게 학습하는 것이 목표
+
+확률을 어떻게 나타내느냐 ?
+
+Cross entropy => row tensor 써야한다 ( pytorch 내부 구현 )
+
+코드 예시에서 Cross entropy 부분이 다르므로 공부하면됨
+Activation function 에 넣기 전 input 을 Logit 이라고 함
+Argmax : List에서 가장 높은 value의 index 추출
+
+map list data
+
+
+2. 학습 관련 개념
+Epoch : 전체 Sample Data 를 학습하는 것
+Step : 
+Batch Size : parameter update 할 때 마다 들어가는 Data size
+
+lr ( learning rate ) : 얼마나 update 하느냐
+
+
+3. MNIST Data
+- 필기체 숫자 ( Image + Label )
+이미지를 학습할 때, pixel 가로x세로 차원의 벡터
+Neural Network : Dimension 하나만 쓸 수 있다
+1D로 변환해야 함 , 뷰 쓰면 됨
+
+Tranining data로 학습 -> Test data 로 성능 확인 ( 각 image + label )
+
+신경망 모델 학습 프로세스
+Data processing => model => loss function => optimizer ( s g d ? ) => epoch
+
+MNIST 이미지가 들어가면 softmax 해서 학습한다 ..
+
+Data를 어떻게 불러오느냐 ?
+torchvision ( Image data , public data set 을 모아놓은 곳 ) , video data set등 ,.. Test Data등도 제공
+Torchvision 에서 Data 가져오는 것 .. 형식은 외우시고
+MNIST_data 에 처음에 numpy 저장되어있는데, transform 으로 바꿀 수 있고 .. 강의자료 링크 참조
+
+Dataloader : Data를 Batch size 만큼 계속 Load 해주어야 하는데 , 그걸 해주는 Tool 임.
+shuffle=True => Random 하게 .. Random 하게 해야 함. 안하면 학습이 overfitting 될 가능성 높음
+( train_Dataloader )
+
+GPU 사용
+if torch.cuda.is_available(): ~ => GPU 되면 GPU , 아니면 CPU ..
+
+모델은
+(28,28) 을 (784) 로 바꾸어 주어야 하고, output size = 10 ?
+
+예시 코드 ( MNIST Classifier model )
+model , data GPU 에 넣고 학습 하면됨
+cross-entropy
+
+
+Accuracy 확인 ( classification 할 때 .. )
+
+
+
+---
+오늘 실습 내용
+MNIST DATA CLASSIFIER MODEl . GPU에서 학습 ..
