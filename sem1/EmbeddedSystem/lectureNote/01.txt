@@ -1,0 +1,26 @@
+Embedded system design constraints
+1. cost
+2. performance ( required operations / time deadlines )
+3. size/weight
+4. power/energy
+5. Environment ( temperature , ... )
+
+
+deal with power issue
+- deal with modules/logics/IO
+
+security : prevent attacks
+safety : maintain stable state
+
+
+real-time system
+1. Hard real-time
+	must occur within the required deadline
+2. Soft real-time
+	function correctly if deadlines are occasionally missed
+3. Firm real-time
+	soft real-time system + no benifit from late delivery of service
+
+A single system may have all types of real-time subsystems.
+
+dealing with missing deadline => use cost function
