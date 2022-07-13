@@ -89,9 +89,6 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         q = self.split_heads(q, batch_size)  
         k = self.split_heads(k, batch_size)  
         v = self.split_heads(v, batch_size)
-        print(f"q : \n{q}")
-        print(f"k : \n{k}")
-        print(f"v : \n{v}")
 
         scaled_attention, attention_weights = scaled_dot_product_attention(q, k, v, mask)
         scaled_attention = tf.transpose(scaled_attention, perm=[0, 2, 1, 3])
@@ -99,7 +96,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         concat_attention = tf.reshape(scaled_attention,(batch_size, -1, self.d_model))
 
         output = self.dense(concat_attention)
-        print(f"mha output : \n{output}")
+        # print(f"mha output : \n{output}")
 
         return output, attention_weights
 
@@ -167,7 +164,7 @@ class DecoderLayer(tf.keras.layers.Layer):
         out2 = self.layernorm2(attn2 + out1)  # (batch_size, target_seq_len, d_model)
 
         ffn_output = self.ffn(out2)  # (batch_size, target_seq_len, d_model)
-        print(f"decoder ffn output : \n{ffn_output}")
+        # print(f"decoder ffn output : \n{ffn_output}")
         ffn_output = self.dropout3(ffn_output, training=training)
         out3 = self.layernorm3(ffn_output + out2)  # (batch_size, target_seq_len, d_model)
 
@@ -226,7 +223,7 @@ class Decoder(tf.keras.layers.Layer):
         # print(f"target embedding matrix : \n{x}")
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
         x += self.pos_encoding[:, :seq_len, :]
-        print(f"target embedding matrix + positional encoding : \n{x}")
+        # print(f"target embedding matrix + positional encoding : \n{x}")
 
         x = self.dropout(x, training=training)
 
@@ -235,7 +232,7 @@ class Decoder(tf.keras.layers.Layer):
 
             attention_weights[f'decoder_layer{i+1}_block1'] = block1
             attention_weights[f'decoder_layer{i+1}_block2'] = block2
-            print(f"decoder layer {i} passed, output matrix is \n{x}")
+            # print(f"decoder layer {i} passed, output matrix is \n{x}")
 
         return x, attention_weights
 
@@ -262,7 +259,7 @@ class Transformer(tf.keras.Model):
 
         final_output = self.final_layer(dec_output)  # (batch_size, tar_seq_len, target_vocab_size)
 
-        print(f"final output of transformer is \n{final_output}")
+        # print(f"final output of transformer is \n{final_output}")
         return final_output, attention_weights
 
 
@@ -274,9 +271,9 @@ class Transformer(tf.keras.Model):
         dec_target_padding_mask = create_padding_mask(tar)
         look_ahead_mask = tf.maximum(dec_target_padding_mask, look_ahead_mask)
 
-        print(f"enc_padding_mask :\n{enc_padding_mask}")
-        print(f"dec_padding_mask : \n{dec_padding_mask}")
-        print(f"look_ahead_mask : \n{look_ahead_mask}")
+        # print(f"enc_padding_mask :\n{enc_padding_mask}")
+        # print(f"dec_padding_mask : \n{dec_padding_mask}")
+        # print(f"look_ahead_mask : \n{look_ahead_mask}")
         return enc_padding_mask, look_ahead_mask, dec_padding_mask
 
 inp_string = ''
@@ -291,4 +288,62 @@ transformer=Transformer(
 
 transformer((inp, tar), True)
 
-print(transformer.trainable_variables)
+# print(transformer.trainable_variables)
+
+class ExportTranslator(tf.Module):
+    def __init__(self, translator):
+        self.translator = translator
+
+    @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.string)])
+    def __call__(self, sentence):
+        (result, tokens, attention_weights) = self.translator(sentence, max_length=100)
+
+        return result
+
+
+
+class Translator(tf.Module):
+    def __init__(self, tokenizers, transformer):
+        self.tokenizers = tokenizers
+        self.transformer = transformer
+
+    def __call__(self, sentence, max_length=20):
+        assert isinstance(sentence, tf.Tensor)
+        if len(sentence.shape) == 0:
+            sentence = sentence[tf.newaxis]
+
+        sentence = self.tokenizers.pt.tokenize(sentence).to_tensor()
+
+        encoder_input = sentence
+
+        start_end = self.tokenizers.en.tokenize([''])[0]
+        start = start_end[0][tf.newaxis]
+        end = start_end[1][tf.newaxis]
+
+        output_array = tf.TensorArray(dtype=tf.int64, size=0, dynamic_size=True)
+        output_array = output_array.write(0, start)
+
+        for i in tf.range(max_length):
+            output = tf.transpose(output_array.stack())
+            predictions, _ = self.transformer([encoder_input, output], training=False)
+
+            predictions = predictions[:, -1:, :]  # (batch_size, 1, vocab_size)
+
+            predicted_id = tf.argmax(predictions, axis=-1)
+
+            output_array = output_array.write(i+1, predicted_id[0])
+
+            if predicted_id == end:
+                break
+
+        output = tf.transpose(output_array.stack())
+        text = tokenizers.en.detokenize(output)[0]  # shape: ()
+
+        tokens = tokenizers.en.lookup(output)[0]
+
+        _, attention_weights = self.transformer([encoder_input, output[:,:-1]], training=False)
+
+        return text, tokens, attention_weights
+
+
+translator = Translator(tokenizers, transformer)
