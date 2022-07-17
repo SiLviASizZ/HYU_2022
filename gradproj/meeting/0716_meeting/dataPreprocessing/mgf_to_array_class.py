@@ -1,59 +1,83 @@
-import numpy as np
-from pathlib import Path
+import pprint
+import tensorflow as tf
 
-class mgf_to_array():
-    def __init__(self, file_path):
-        self.file_path = file_path
-        self.first_matrix = [[1, 0, 101], [19, 1, 102]]
-        self.SEQ = ''
-        self.PEPMASS = 0.
-        self.CHARGE = 0.
+class MgfToTensor():
+    def __init__(self):
+        self.first_matrix = [[1, 0, 1], [19, 1, 1]]
+        self.return_matrix = []
+        self.max_length = 0
+        self.num_batch = 0
+        self.return_tensor = tf.zeros(0)
 
-        self.return_matrix = np.empty(shape=0)
-
-    def call(self):
-        batch_matrix = []
-        f = open(self.file_path, 'r')
+    def call(self, file_path):
+        f = open(file_path, 'r')
         while True:
+            batch_matrix = []
+            PEPMASS = 0
+            CHARGE = 0
+            SEQ = ''
+
             line = f.readline().replace("\n","\t")
             if not line:
                 break
             if line == 'BEGIN IONS\t':
+                batch_matrix.append(self.first_matrix[0])
+                batch_matrix.append(self.first_matrix[1])
+                self.num_batch += 1
                 while(True):
                     batch_line = f.readline().replace("\n","\t").replace("="," ")
                     if batch_line == 'END IONS\t':
-                        print(batch_matrix)
-                        self.return_matrix.append(np.array(batch_matrix))
-                        batch_matrix.clear()
+                        
+                        x = (PEPMASS-1.007276035)*CHARGE
+                        y = x - 17.003288665
+                        batch_matrix.append(self.get_batch(x, 1))
+                        batch_matrix.append(self.get_batch(y, 1))
+                        # for x in range(len(batch_matrix)):
+                        #     self.return_matrix.append(batch_matrix[x])
+                        self.return_matrix.append(batch_matrix)
+                        if len(batch_matrix) > self.max_length:
+                            self.max_length = len(batch_matrix)
                         break
                     else:
                         (first, second) = batch_line.split()
                         if first == 'PEPMASS':
-                            self.PEPMASS = float(second.strip())
+                            PEPMASS = float(second.strip())
                         elif first == 'CHARGE':
-                            self.CHARGE = float(second.strip('+-'))
+                            CHARGE = float(second.strip('+-'))
                         elif first == 'SEQ':
-                            self.SEQ = (second.strip().replace("C(+57.02)","C").replace("M(+15.99)","m").replace("N(+.98)","n")
+                            SEQ = (second.strip().replace("C(+57.02)","C").replace("M(+15.99)","m").replace("N(+.98)","n")
                                         .replace("Q(+.98)","q").replace("S(+79.97)","s")
                                         .replace("T(+79.97","t").replace("Y(+79.97)","y"))
+                            print(SEQ)
                         elif (first == 'TITLE') or (first == 'SCANS') or (first == 'RTINSECONDS'):
                             continue
                         else: #peak
-                            batch_matrix.append([first, first, second])
+                            batch_matrix.append(self.get_batch(first, second))
         f.close()
+        # tf.convert_to_tensor(self.return_matrix, dtype=tf.float32)
+        self.return_tensor = tf.ragged.constant(self.return_matrix).to_tensor(default_value=0)
+        return self.return_tensor
 
-    def normalize(self, max, v):
-        return v/max
+    def get_batch(self, first, second):
+        x = int(float(first))
+        y = float(first) - x
+        z = int(float(second))
+        return [x, int(y*100), z]
 
-    def find_end_value(self, p, c):
-        y = (p-1.007276035)*CHARGE
-        return y, y-18.0105647
+    def check_length(self):
+        print(self.max_length)
 
-    def check(self):
-        print(self.return_matrix)
+    def check_size(self):
+        print(self.num_batch)
+
 
 
 # for test
-transform = mgf_to_array(Path("./db\human_peaks_db_sample.mgf"))
-transform
-transform.check()
+transform = MgfToTensor()
+k = transform.call("./db\human_peaks_db_sample.mgf")
+# transform.check()
+pprint.pprint(k)
+
+transform.check_length()
+transform.check_size()
+print(tf.shape(k))

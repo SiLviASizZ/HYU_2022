@@ -58,3 +58,6 @@ while True:
                 else: # peak, batch_db_dict is dict of peaks, (position, intensity)
                     batch_db_dict[first] = float(second) # key:string, value:float
     # print("batch over")
+
+f.close()
+output.close()
