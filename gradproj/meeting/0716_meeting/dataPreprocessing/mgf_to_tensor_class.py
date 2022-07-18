@@ -3,15 +3,15 @@ import tensorflow as tf
 
 class MgfToTensor():
     def __init__(self):
-        self.first_matrix = [[1, 0, 1], [19, 1, 1]]
+        self.first_matrix = [[1, 0, 1.0100], [19, 1, 1.0200]]
         self.return_matrix = []
         self.max_length = 0
-        self.num_batch = 0
+        self.num_spectrum = 0
         self.return_tensor = tf.zeros(0)
 
     def call(self, file_path):
         f = open(file_path, 'r')
-        self.num_batch = 0
+        self.num_spectrum = 0
         self.max_length = 0
         self.return_matrix = []
         self.return_tensor = tf.zeros(0)
@@ -20,27 +20,32 @@ class MgfToTensor():
         while True:
             batch_matrix = []
             PEPMASS = 0
-            CHARGE = 0 
+            CHARGE = 0
+            max_value = 0.
             SEQ = ''
 
-            line = f.readline().replace("\n","\t")
+            line = f.readline()
             if not line:
                 break
-            if line == 'BEGIN IONS\t':
-                batch_matrix.append(self.first_matrix[0])
-                batch_matrix.append(self.first_matrix[1])
-                self.num_batch += 1
+            if line == 'BEGIN IONS\n':
+                self.num_spectrum += 1
                 while(True):
-                    batch_line = f.readline().replace("\n","\t").replace("="," ")
-                    if batch_line == 'END IONS\t':
-                        
-                        x = (PEPMASS-1.007276035)*CHARGE
+                    batch_line = f.readline().replace("="," ")
+                    if batch_line == 'END IONS\n':
+                        x = (PEPMASS-1.007276035)*CHARGE + 1.007276035
                         y = x - 17.003288665
-                        batch_matrix.append(self.get_batch(x, 1))
-                        batch_matrix.append(self.get_batch(y, 1))
-                        # for x in range(len(batch_matrix)):
-                        #     self.return_matrix.append(batch_matrix[x])
+
+                        for i in range(len(batch_matrix)):
+                            batch_matrix[i][2] /= max_value
+                        batch_matrix.insert(0, self.first_matrix[1])
+                        batch_matrix.insert(0, self.first_matrix[0])
+
+                        batch_matrix.append(self.get_batch(x, 1.0100))
+                        batch_matrix.append(self.get_batch(y, 1.0200))
+                        
                         self.return_matrix.append(batch_matrix)
+
+
                         if len(batch_matrix) > self.max_length:
                             self.max_length = len(batch_matrix)
                         break
@@ -57,25 +62,25 @@ class MgfToTensor():
                         elif (first == 'TITLE') or (first == 'SCANS') or (first == 'RTINSECONDS'):
                             continue
                         else: #peak
-                            if max_value < second:
-                                max_value = second
-                            batch_matrix.append(self.get_batch(first, second))
+                            m_over_z = float(first)
+                            intensity = float(second)
+                            if max_value < intensity:
+                                max_value = intensity
+                            batch_matrix.append(self.get_batch(m_over_z, intensity))
         f.close()
-        # tf.convert_to_tensor(self.return_matrix, dtype=tf.float32)
         self.return_tensor = tf.ragged.constant(self.return_matrix).to_tensor(default_value=0)
-        return self.return_tensor # (batch_num, max_length, 3)
+        return self.return_tensor # (num_spectrum, max_length, 3)
 
-    def get_batch(self, first, second):
-        x = int(float(first))
-        y = float(first) - x
-        z = int(float(second))
-        return [x, int(y*100), z]
+    def get_batch(self, first, second): # first, second are strings, e.g. '174.246', '24.19882'
+        x = int(first)
+        y = first - x
+        return [x, int(y*100), second]
 
     def check_length(self):
         print(self.max_length)
 
     def check_size(self):
-        print(self.num_batch)
+        print(self.num_spectrum)
 
 
 
