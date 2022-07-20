@@ -1,21 +1,21 @@
-import pprint
-import tensorflow as tf
-
 class MgfToTensor():
     def __init__(self):
-        self.first_matrix = [[1, 0, 1.0100], [19, 1, 1.0200]]
+        self.first_matrix = [[1, 0, 101], [19, 1, 102]]
         self.return_matrix = []
         self.max_length = 0
         self.num_spectrum = 0
         self.return_tensor = tf.zeros(0)
+        self.SEQ_list = []
+        self.CHARGE_list = []
 
     def call(self, file_path):
         f = open(file_path, 'r')
         self.num_spectrum = 0
         self.max_length = 0
-        self.return_matrix = []
+        self.return_matrix.clear()
         self.return_tensor = tf.zeros(0)
-        # max_value = 0
+        self.SEQ_list.clear()
+        self.CHARGE_list.clear()
 
         while True:
             batch_matrix = []
@@ -33,16 +33,20 @@ class MgfToTensor():
                     batch_line = f.readline().replace("="," ")
                     if batch_line == 'END IONS\n':
                         x = (PEPMASS-1.007276035)*CHARGE + 1.007276035
-                        y = x - 17.003288665
+                        y = x - 18.0105647
 
                         for i in range(len(batch_matrix)):
                             batch_matrix[i][2] /= max_value
+                            batch_matrix[i][2] = int(batch_matrix[i][2]*100)
                         batch_matrix.insert(0, self.first_matrix[1])
                         batch_matrix.insert(0, self.first_matrix[0])
+                        batch_matrix.insert(0, [0, 0, 0])
+                        batch_matrix.insert(0, [0, 0, CHARGE])
 
-                        batch_matrix.append(self.get_batch(x, 1.0100))
-                        batch_matrix.append(self.get_batch(y, 1.0200))
+                        batch_matrix.append(self.get_batch(y, 101)) # y : b-ion
+                        batch_matrix.append(self.get_batch(x, 102)) # x : y-ion
                         
+
                         self.return_matrix.append(batch_matrix)
 
 
@@ -54,14 +58,16 @@ class MgfToTensor():
                         if first == 'PEPMASS':
                             PEPMASS = float(second.strip())
                         elif first == 'CHARGE':
-                            CHARGE = float(second.strip('+-')) # is CHARGE always positive ?
+                            CHARGE = float(second.strip('+-'))
+                            self.CHARGE_list.append(CHARGE)
                         elif first == 'SEQ':
                             SEQ = (second.strip().replace("C(+57.02)","C").replace("M(+15.99)","m").replace("N(+.98)","n")
                                         .replace("Q(+.98)","q").replace("S(+79.97)","s")
                                         .replace("T(+79.97","t").replace("Y(+79.97)","y"))
+                            self.SEQ_list.append(SEQ)
                         elif (first == 'TITLE') or (first == 'SCANS') or (first == 'RTINSECONDS'):
                             continue
-                        else: #peak
+                        else: # peak
                             m_over_z = float(first)
                             intensity = float(second)
                             if max_value < intensity:
@@ -76,12 +82,8 @@ class MgfToTensor():
         y = first - x
         return [x, int(y*100), second]
 
+    def get_sequence(self):
+        return self.SEQ_list
 
-transform = MgfToTensor()
-k = transform.call("./db\human_peaks_db_sample.mgf")
-# transform.check()
-pprint.pprint(k)
-
-transform.check_length()
-transform.check_size()
-print(tf.shape(k))
+    def get_charge(self):
+        return self.CHARGE_list
