@@ -1,6 +1,15 @@
 import tensorflow as tf
 import numpy as np
 
+# hyperparameter start
+
+mass_int_d = 56
+mass_float_d = 4
+intensity_d = 4
+
+# hyperparameter end
+
+
 class MgfToTensor():
     def __init__(self):
         self.first_matrix = [[1, 0, 101], [19, 1, 102]]
@@ -160,5 +169,16 @@ def tokenize_seq(seq_input, charge_input):
 
     return result_matrix
 
-for i in range(len(sequence)):
-    print(tokenize_seq(sequence[i], charge[i]))
+# for i in range(len(sequence)):
+#     print(tokenize_seq(sequence[i], charge[i]))
+
+# Now, Embedding
+# Embedding layer input : (batch_size, num_peak, 3)
+# Embedding layer output : (batch_size, num_peak, d_model)
+
+
+# Transformer start
+
+class Transformer()
+
+# Transformer end

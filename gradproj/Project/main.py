@@ -160,5 +160,6 @@ def tokenize_seq(seq_input, charge_input):
 
     return result_matrix
 
-for i in range(len(sequence)):
-    print(tokenize_seq(sequence[i], charge[i]))
+# for i in range(len(sequence)):
+#     print(tokenize_seq(sequence[i], charge[i]))
+
