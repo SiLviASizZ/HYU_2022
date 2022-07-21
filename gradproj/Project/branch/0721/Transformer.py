@@ -35,7 +35,20 @@ def positional_encoding(position, d_model):
 # positional encoding end
 
 
+# Multi Head Attention start
 
+
+
+
+# Multi Head Attention end
+
+
+# Encoder Layer Start
+
+
+
+
+# Encoder layer end
 
 
 
@@ -92,7 +105,7 @@ def Decoder(tf.keras.layers.Layer):
     def call(self, x, enc_output, training):
         attention_weights = {}
         
-        x *= tf.math.sqrt(tf.case(self.d_model, tf.float32))
+        x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
         # x += self.pos_encoding[:, tf.shape(x)[1], :]
 
         x = self.dropout(x, training=training)
@@ -136,7 +149,7 @@ class Transformer(tf.keras.Model):
         enc_output = self.encoder(enc_input, training)
         dec_output = self.decoder(dec_input, enc_output, training)
 
-        final_output = self.final_layer(dec_output)
+        final_output = tf.squeeze(self.final_layer(dec_output))
 
         return final_output
 
@@ -144,7 +157,9 @@ class Transformer(tf.keras.Model):
         # input : ( batch_size, num_peak(or num_digestion), 3)
         # output : ( batch_size, num_peak(or num_digestion), d_model)
         embedding_matrix = tf.split(input, num_or_size_splits=3, axis=-1) # mass_int, mass_float, intensity 에 대해서 따로 Embedding 후 concatenate
-        return tf.squeeze(tf.concat([self.embedding_mass_int(embedding_matrix[0]), self.embedding_mass_float(embedding_matrix[1]), self.embedding_intensity(embedding_matrix[2])], axis = -1))
+        return tf.squeeze(tf.concat([self.embedding_mass_int(embedding_matrix[0]),
+                                        self.embedding_mass_float(embedding_matrix[1]), 
+                                        self.embedding_intensity(embedding_matrix[2])], axis = -1))
 
 
 
