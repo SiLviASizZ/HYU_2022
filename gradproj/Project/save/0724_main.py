@@ -1,17 +1,7 @@
 import tensorflow as tf
 import numpy as np
-import pprint
 
-# hyperparameter start
-
-mass_int_d = 56
-mass_float_d = 4
-intensity_d = 4
-
-# hyperparameter end
-
-
-class ReadMgf():
+class MgfToTensor():
     def __init__(self):
         self.first_matrix = [[1, 0, 101], [19, 1, 102]]
         self.return_matrix = []
@@ -21,7 +11,7 @@ class ReadMgf():
         self.SEQ_list = []
         self.CHARGE_list = []
 
-    def get_enc_input(self, file_path):
+    def call(self, file_path):
         f = open(file_path, 'r')
         self.num_spectrum = 0
         self.max_length = 0
@@ -45,8 +35,8 @@ class ReadMgf():
                 while(True):
                     batch_line = f.readline().replace("="," ")
                     if batch_line == 'END IONS\n':
-                        y = (PEPMASS-1.007276035)*CHARGE + 1.007276035
-                        b = y - 18.0105647
+                        x = (PEPMASS-1.007276035)*CHARGE + 1.007276035
+                        y = x - 18.0105647
 
                         for i in range(len(batch_matrix)):
                             batch_matrix[i][2] /= max_value
@@ -56,8 +46,8 @@ class ReadMgf():
                         batch_matrix.insert(0, [0, 0, 0])
                         batch_matrix.insert(0, [0, 0, CHARGE])
 
-                        batch_matrix.append(self.get_batch(b, 101)) # b-ion
-                        batch_matrix.append(self.get_batch(y, 102)) # y-ion
+                        batch_matrix.append(self.get_batch(y, 101)) # y : b-ion
+                        batch_matrix.append(self.get_batch(x, 102)) # x : y-ion
                         
 
                         self.return_matrix.append(batch_matrix)
@@ -90,102 +80,86 @@ class ReadMgf():
         self.return_tensor = tf.ragged.constant(self.return_matrix).to_tensor(default_value=0)
         return self.return_tensor # (num_spectrum, max_length, 3)
 
-    def get_batch(self, first, second):
+    def get_batch(self, first, second): # first, second are strings, e.g. '174.246', '24.19882'
         x = int(first)
         y = first - x
         return [x, int(y*100), second]
 
-    def tokenize_seq(self, seq_input, charge_input):
-        Proton = 1.007276035
-        H2O = 18.0105647
+    def get_sequence(self):
+        return self.SEQ_list
 
-        amino2idx = {'<pad>': 0, '<bos>': 1, '<eos>': 2,
+    def get_charge(self):
+        return self.CHARGE_list
+
+
+transform = MgfToTensor()
+k = transform.call("./db\human_peaks_db_sample.mgf")
+
+sequence = transform.get_sequence() # 1 dimensional array, ['seq1', 'seq2' ... ]
+charge = transform.get_charge() # 1 dimensional array, [1., 4., 2., 3. ...]
+
+def tokenize_seq(seq_input, charge_input):
+    # get string ( sequence ) as input
+    # output is 2-dimensional array, [num_digestion, 3]
+    # num_digestion includes the whole sequence for b-ion and y-ion respectively
+    
+    
+    # Tokenize table Begin
+     
+    Proton = 1.007276035
+    H2O = 18.0105647
+
+    amino2idx = {'<pad>': 0, '<bos>': 1, '<eos>': 2,
              'A': 3, 'C': 4, 'D': 5, 'E': 6, 'F': 7,
              'G': 8, 'H': 9, 'I': 10, 'K': 11, 'L': 12,
              'M': 13, 'N': 14, 'P': 15, 'Q': 16, 'R': 17,
              'S': 18, 'T': 19, 'V': 20, 'W': 21, 'Y': 22,
              'm': 23, 'n': 24, 'q': 25, 's': 26, 't': 27, 'y': 28}
 
-        idx2amino = {0: '<pad>',1: '<bos>', 2: '<eos>',
+    idx2amino = {0: '<pad>',1: '<bos>', 2: '<eos>',
              3: 'A', 4: 'C', 5: 'D', 6: 'E', 7: 'F',
              8: 'G', 9: 'H', 10: 'I', 11: 'K', 12: 'L',
              13: 'M', 14: 'N', 15: 'P', 16: 'Q', 17: 'R',
              18: 'S', 19: 'T', 20: 'V', 21: 'W', 22: 'Y',
              23: 'm', 24: 'n', 25: 'q', 26: 's', 27: 't', 28: 'y'}
 
-        idx2mass = {0: 0.00, 1: 0.00, 2: 0.00,
+    idx2mass = {0: 0.00, 1: 0.00, 2: 0.00,
              3: 71.03, 4: 160.03, 5: 115.02, 6: 129.04, 7: 147.06,
              8: 57.021, 9: 137.05, 10: 113.08, 11: 128.09, 12: 113.08,
              13: 131.04, 14: 114.04, 15: 97.05, 16: 128.05, 17: 156.10,
              18: 87.03, 19: 101.04, 20: 99.06, 21: 186.07, 22: 163.06,
              23: 147.03, 24: 115.02, 25: 129.04, 26: 167.00, 27: 181.02, 28:243.04}
 
-        # Tokenize table End
+    # Tokenize table End
 
-        b_ion_seq = list(seq_input)
-        y_ion_seq = list(reversed(b_ion_seq))
-        b_ion_tokenize = []
-        y_ion_tokenize = []
-        b_ion_mass = []
-        y_ion_mass = []
-        concatenated_mass = []
-        result_matrix = []
+    b_ion_seq = list(seq_input)
+    y_ion_seq = list(reversed(b_ion_seq))
+    b_ion_tokenize = []
+    y_ion_tokenize = []
+    b_ion_mass = []
+    y_ion_mass = []
+    concatenated_mass = []
+    result_matrix = []
 
-        for i in range(len(b_ion_seq)):        ## transform to mass through given dictionary
+    for i in range(len(b_ion_seq)):        ## transform to mass through given dictionary
         # amino -> index
-            b_ion_tokenize.append(amino2idx[b_ion_seq[i]]) # ion_tokenize : index
-            y_ion_tokenize.append(amino2idx[y_ion_seq[i]])
+        b_ion_tokenize.append(amino2idx[b_ion_seq[i]]) # ion_tokenize : index
+        y_ion_tokenize.append(amino2idx[y_ion_seq[i]])
         # index -> mass
-            b_ion_mass.append(idx2mass[b_ion_tokenize[i]]) # ion_mass : mass of each characters
-            y_ion_mass.append(idx2mass[y_ion_tokenize[i]])
-        b_ion_mass = np.cumsum(b_ion_mass) + Proton # ion_mass : mass of each digestion
-        y_ion_mass = np.cumsum(y_ion_mass) + Proton + H2O
+        b_ion_mass.append(idx2mass[b_ion_tokenize[i]]) # ion_mass : mass of each characters
+        y_ion_mass.append(idx2mass[y_ion_tokenize[i]])
+    b_ion_mass = np.cumsum(b_ion_mass) + 1.007276035 # ion_mass : mass of each digestion
+    y_ion_mass = np.cumsum(y_ion_mass) + 19.017840735
     
-        concatenated_mass = np.sort(np.concatenate([b_ion_mass, y_ion_mass]))
+    concatenated_mass = np.sort(np.concatenate([b_ion_mass, y_ion_mass]))
     
-        result_matrix.append([0, 0, charge_input])
-        result_matrix.append([0, 0, 0])
-        for i in range(len(concatenated_mass)):
-            result_matrix.append(self.get_batch(concatenated_mass[i], 50))
+    result_matrix.append([0, 0, charge_input])
+    result_matrix.append([0, 0, 0])
+    for i in range(len(concatenated_mass)):
+        result_matrix.append([int(concatenated_mass[i]), int((float(concatenated_mass[i])-int(concatenated_mass[i]))*100), 50])
 
+    return result_matrix
 
+for i in range(len(sequence)):
+    print(tf.cast(tokenize_seq(sequence[i], charge[i]), dtype=tf.int64))
 
-
-        return result_matrix
-
-    def get_dec_input(self):
-        dec_input = []
-        dec_input_tensor = tf.zeros(0)
-        for i in range(len(self.SEQ_list)):
-            dec_input.append(self.tokenize_seq(self.SEQ_list[i], self.CHARGE_list[i]))
-        dec_input_tensor = tf.ragged.constant(dec_input).to_tensor(default_value=0)
-        return dec_input_tensor
-
-
-
-
-transform = ReadMgf()
-k = transform.get_enc_input("./db\human_peaks_db_sample.mgf")
-dec_input = transform.get_dec_input()
-
-print(tf.cast(k, dtype=tf.int64))
-print("enc end, dec start")
-print(tf.cast(dec_input, dtype=tf.int64))
-
-# concatenate here
-# tokenized_seq = []
-# for i in range(len(sequence)):
-#    tokenized_seq.append(tokenize_seq(sequence[i], charge[i]))
-# tokenized_tensor = tf.ragged.constant(tokenized_seq).to_tensor(default_value=0)
-# print(tf.cast(tokenized_tensor, dtype=tf.int64))
-
-# Now, Embedding
-# Embedding layer input : (batch_size, num_peak, 3)
-# Embedding layer output : (batch_size, num_peak, d_model)
-
-
-# Transformer start
-
-# class Transformer():
-
-# Transformer end

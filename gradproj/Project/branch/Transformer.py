@@ -11,6 +11,7 @@ d_model = d_mass_int + d_mass_float + d_intensity
 dff = 128
 num_peak = 500
 rate = 0.1
+epsilon = 1e-6
 
 # hyperparameter end
 
@@ -42,10 +43,35 @@ def positional_encoding(position, d_model):
 
 # Multi Head Attention end
 
+# Feed Forward Network start
+
+def point_wise_feed_forward_network(d_model, dff):
+    return tf.keras.Sequential([
+        tf.keras.layers.Dense(dff, activation='relu'),  
+        tf.keras.layers.Dense(d_model)  
+    ])
+
+# Feed Forward Network end
+
 
 # Encoder Layer Start
 
+class EncoderLayer(tf.keras.layers.Layer):
+    def __init__(self, d_model, num_heads, dff, rate):
+        super(EncoderLayer, self).__init__()
 
+        self.mha = MultiHeadAttention(d_model=d_model, num_heads=num_heads)
+        self.ffn = point_wise_feed_forward_network(d_model, dff)
+
+        self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=epsilon)
+        self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=epsilon)
+
+        self.dropout1 = tf.keras.layers.Dropout(rate)
+        self.dropout2 = tf.keras.layers.Dropout(rate)
+
+    def call(self, x, training, mask):
+        attention_output = self.mha(x, x, x, mask)
+        
 
 
 # Encoder layer end
